@@ -3,6 +3,7 @@
 import sys
 import re
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from collections import defaultdict
 from functools import wraps
 import copy
 
@@ -60,9 +61,10 @@ class QueryIndex:
             postings=[x.split(':') for x in postings] #postings=[['docId1', 'pos1,pos2'], ['docID2', 'pos1,pos2']]
             postings=[ [str(x[0]), map(str, x[1].split(','))] for x in postings ]   #final postings list  
             self.index[term]=postings
-            tf = tf.split(';')
-            # self.tf[term] = map(float, tf)
-            # self.idf[term] = float(idf)
+            tf = tf.split(',')           
+            self.tf[term] = list(map(float, tf))
+            # self.tf[term] = [float(tf) for tf in self.tf[term]]
+            self.idf[term] = float(idf)
         f.close()
 
         f = open(self.titleIndexFile, 'r', encoding="utf-8")
@@ -90,7 +92,7 @@ class QueryIndex:
                     docVecs[doc][termIndex] = self.tf[term][docIndex]
 
         #count score of each doc
-        docScores = [[self.dotProduct(currDocVec, queryVector), doc ] for doc, curDocVec in docVecs.items()]
+        docScores = [[self.dotProduct(currDocVec, queryVector), doc ] for doc, currDocVec in docVecs.items()]
         docScores.sort(reverse=True)
         resultDocs = [x[1] for x in docScores][:10]
         resultDocs = [self.myIndex[x] for x in resultDocs]
@@ -124,7 +126,7 @@ class QueryIndex:
             return
         else:
             postings=self.index[term]
-            docs=[x[0] for p in postings]
+            docs=[p[0] for p in postings]
             # p=' '.join(map(str,p)) 
             # print(p)
             # print via rankDocuments()
@@ -141,7 +143,7 @@ class QueryIndex:
         for term in q:
             try:
                 postings=self.index[term]
-                docs=[x[0] for x in postings]
+                docs=[p[0] for p in postings]
                 li=li|set(docs)
             except:
                 pass

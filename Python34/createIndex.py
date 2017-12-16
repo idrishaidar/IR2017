@@ -81,7 +81,7 @@ class CreateIndex:
 
         f=open(self.titleIndexFile, 'w', encoding="utf-8")
         for docid, title in self.myIndex.items():
-            print (''.join((docid, title)), file=f)
+            print (docid.strip(), title, file=f)
         f.close()
         
 
@@ -107,7 +107,7 @@ class CreateIndex:
         #main loop creating the index
         while docdict != {}:            
             lines = '\n'.join((docdict['TITLE'],docdict['TEXT']))
-            docid = str(docdict['DOCNO'])
+            docid = (str(docdict['DOCNO'])).strip()
             terms = self.getTerms(lines)
 
             self.myIndex[docdict['DOCNO']] = docdict['TITLE']
@@ -142,7 +142,7 @@ class CreateIndex:
         gc.enable()
             
         self.writeIndexToFile()
-        
+        print ("Indexing finished.")
     
 if __name__=="__main__":
     c=CreateIndex()
