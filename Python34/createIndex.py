@@ -80,7 +80,7 @@ class CreateIndex:
 
         f=open(self.titleIndexFile, 'w', encoding="utf-8")
         for docid, title in self.myIndex.items():
-            print (''.join(docid, title), file=f)
+            print (''.join((docid, title)), file=f)
         f.close()
         
 
