@@ -45,7 +45,8 @@ class CreateIndex:
             doc.append(line)
         
         currentDoc=''.join(doc)
-        docid=re.search('<DOCID>(.*?)</DOCID>', currentDoc, re.DOTALL)
+        #harusnya bukan docno tapi docid, utk semntara docno nyesuaiin sama koleksinya
+        docid=re.search('<DOCNO>(.*?)</DOCNO>', currentDoc, re.DOTALL)
         doctitle=re.search('<TITLE>(.*?)</TITLE>', currentDoc, re.DOTALL)
         doctext=re.search('<TEXT>(.*?)</TEXT>', currentDoc, re.DOTALL)
         
@@ -53,7 +54,7 @@ class CreateIndex:
             return {}
 
         docs={}
-        docs['DOCID']=docid.group(1)
+        docs['DOCNO']=docid.group(1)
         docs['TITLE']=doctitle.group(1)
         docs['TEXT']=doctext.group(1)
 
@@ -106,10 +107,10 @@ class CreateIndex:
         #main loop creating the index
         while docdict != {}:            
             lines = '\n'.join((docdict['TITLE'],docdict['TEXT']))
-            docid = str(docdict['DOCID'])
+            docid = str(docdict['DOCNO'])
             terms = self.getTerms(lines)
 
-            self.myIndex[docdict['DOCID']] = docdict['TITLE']
+            self.myIndex[docdict['DOCNO']] = docdict['TITLE']
             self.docCount+=1
             
             #build the index for the current page

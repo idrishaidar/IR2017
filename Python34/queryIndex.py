@@ -2,7 +2,6 @@
 
 import sys
 import re
-# from porterStemmer import PorterStemmer
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from functools import wraps
 import copy
@@ -13,8 +12,10 @@ stemmer = factory.create_stemmer()
 class QueryIndex:
 
     def __init__(self):
-        self.index={}
-
+        self.index = {}
+        self.myIndex = {}
+        self.tf = {}
+        self.idf  {}
 
     def intersectLists(self,lists):
         if len(lists)==0:
@@ -25,9 +26,9 @@ class QueryIndex:
         
     
     def getStopwords(self):
-        f=open(self.stopwordsFile, 'r')
+        f=open(self.stopwordsFile, 'r', encoding="utf-8")
         stopwords=[line.rstrip() for line in f]
-        self.sw=dict.fromkeys(stopwords)
+        self.stopww=dict.fromkeys(stopwords)
         f.close()
         
 
@@ -35,8 +36,8 @@ class QueryIndex:
         line=line.lower()
         line=re.sub(r'[^a-z0-9 ]',' ',line) #put spaces instead of non-alphanumeric characters
         line=line.split()
-        line=[x for x in line if x not in self.sw]
-        line=[ stemmer.stem(word for word in line]
+        line=[x for x in line if x not in self.stopw]
+        line=[ stemmer.stem(word) for word in line]
         return line
         
     
@@ -51,16 +52,51 @@ class QueryIndex:
 
 
     def readIndex(self):
-        f=open(self.indexFile, 'r');
+        f=open(self.indexFile, 'r', encoding="utf-8")
         for line in f:
             line=line.rstrip()
+            term, postings, tf, idf = line.split('|')
             term, postings = line.split('|')    #term='termID', postings='docID1:pos1,pos2;docID2:pos1,pos2'
             postings=postings.split(';')        #postings=['docId1:pos1,pos2','docID2:pos1,pos2']
             postings=[x.split(':') for x in postings] #postings=[['docId1', 'pos1,pos2'], ['docID2', 'pos1,pos2']]
             postings=[ [int(x[0]), map(int, x[1].split(','))] for x in postings ]   #final postings list  
             self.index[term]=postings
+            tf = tf.split(';')
+            # self.tf[term] = map(float, tf)
+            # self.idf[term] = float(idf)
         f.close()
 
+        f = open(self.titleIndexFile, 'r', encoding="utf-8")
+        for line in f:
+            docid, title = line.rstrip().split(' ', 1)
+            self.myIndex[int(pageid)]=title
+        f.close()
+
+    def dotProduct(self, vector1, vector2):
+        if len(vector1) != len(vector2):
+            return 0
+        return sum([x*y for x,y in zip(vector1, vector2)])
+
+    def rankDocuments(self, terms, docs):
+        docVecs = defaultdict(lambda: [0]*len(terms))
+        queryVector = [0]*len(terms)
+        for termIndex, term in enumerate(terms):
+            if term not in self.index:
+                continue
+            
+            queryVector[termIndex] = self.idf[term]
+
+            for docIndex, (doc, postings) in enumerate(self.index[term]):
+                if doc in docs: 
+                    docVecs[doc][termIndex] = self.tf[term][docIndex]
+
+        #count score of each doc
+        docScores = [[self.dotProduct(currDocVec, queryVector), doc ] for doc, curDocVec in docVecs.items()]
+        docScores.sort(reverse=True)
+        resultDocs = [x|1] for x in docScores][:10]
+        resultDocs = [self.myIndex[x] for x in resultDocs]
+        print ('\n'.join(resultDocs))
+        print ('\n')
 
     def queryType(self,q):
         # if '"' in q:
@@ -72,7 +108,7 @@ class QueryIndex:
 
 
     def owq(self,q):
-        '''One Word Query'''
+        # One Word Query
         originalQuery=q
         q=self.getTerms(q)
         if len(q)==0:
@@ -83,41 +119,41 @@ class QueryIndex:
             return
         
         #q contains only 1 term 
-        q=q[0]
-        if q not in self.index:
+        term=q[0]
+        if term not in self.index:
             print('')
             return
         else:
-            p=self.index[q]
-            p=[x[0] for x in p]
-            p=' '.join(map(str,p))  #docid's are integers
-            print(p)
-          
+            postings=self.index[term]
+            docs=[x[0] for p in postings]
+            # p=' '.join(map(str,p)) 
+            # print(p)
+            # print via rankDocuments()
+            self.rankDocuments(q, docs)          
 
     def ftq(self,q):
-        """Free Text Query"""
+        # Free text query
         q=self.getTerms(q)
         if len(q)==0:
             print('')
             return
         
-        li=set()
+        thisList=set()
         for term in q:
             try:
-                p=self.index[term]
-                p=[x[0] for x in p]
-                li=li|set(p)
+                postings=self.index[term]
+                docs=[x[0] for x in postings]
+                li=li|set(docs)
             except:
-                #term not in index
                 pass
         
-        li=list(li)
-        li.sort()
-        print(' '.join(map(str,li)))
-
+        thisList=list(thisList)
+        # li.sort()
+        # print(' '.join(map(str,li)))
+        self.rankDocuments(q, li)
 
     def pq(self,q):
-        '''Phrase Query'''
+        # Phrase Query (not completed)
         originalQuery=q
         q=self.getTerms(q)
         if len(q)==0:
@@ -128,19 +164,16 @@ class QueryIndex:
             return
 
         phraseDocs=self.pqDocs(q)
-
-        print(' '.join(map(str, phraseDocs)))    #prints empty line if no matching docs
+        self.rankDocuments(q, phraseDocs)
+        # print(' '.join(map(str, phraseDocs)))
         
         
     def pqDocs(self, q):
-        """ here q is not the query, it is the list of terms """
         phraseDocs=[]
         length=len(q)
         #first find matching docs
         for term in q:
             if term not in self.index:
-                #if a term doesn't appear in the index
-                #there can't be any document maching it
                 return []
         
         postings=self.getPostings(q)    #all the terms in q are in the index
@@ -176,11 +209,12 @@ class QueryIndex:
         param=sys.argv
         self.stopwordsFile=param[1]
         self.indexFile=param[2]
+        self.titleIndexFile=param[3]
 
 
     def queryIndex(self):
         self.getParams()
-        self.readIndex()  
+        self.readIndex() 
         self.getStopwords() 
 
         while True:
