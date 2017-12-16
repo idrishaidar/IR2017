@@ -7,7 +7,8 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from functools import wraps
 import copy
 
-porter=PorterStemmer()
+factory = StemmerFactory()
+stemmer = factory.create_stemmer()
 
 class QueryIndex:
 
@@ -35,7 +36,7 @@ class QueryIndex:
         line=re.sub(r'[^a-z0-9 ]',' ',line) #put spaces instead of non-alphanumeric characters
         line=line.split()
         line=[x for x in line if x not in self.sw]
-        line=[ porter.stem(word, 0, len(word)-1) for word in line]
+        line=[ stemmer.stem(word for word in line]
         return line
         
     
