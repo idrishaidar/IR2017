@@ -28,7 +28,7 @@ class QueryIndex:
     def getStopwords(self):
         f=open(self.stopwordsFile, 'r', encoding="utf-8")
         stopwords=[line.rstrip() for line in f]
-        self.stopww=dict.fromkeys(stopwords)
+        self.stopw=dict.fromkeys(stopwords)
         f.close()
         
 
