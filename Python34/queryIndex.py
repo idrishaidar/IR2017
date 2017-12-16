@@ -15,7 +15,7 @@ class QueryIndex:
         self.index = {}
         self.myIndex = {}
         self.tf = {}
-        self.idf  {}
+        self.idf = {}
 
     def intersectLists(self,lists):
         if len(lists)==0:
@@ -55,11 +55,10 @@ class QueryIndex:
         f=open(self.indexFile, 'r', encoding="utf-8")
         for line in f:
             line=line.rstrip()
-            term, postings, tf, idf = line.split('|')
-            term, postings = line.split('|')    #term='termID', postings='docID1:pos1,pos2;docID2:pos1,pos2'
+            term, postings, tf, idf = line.split('|') #term='termID', postings='docID1:pos1,pos2;docID2:pos1,pos2'
             postings=postings.split(';')        #postings=['docId1:pos1,pos2','docID2:pos1,pos2']
             postings=[x.split(':') for x in postings] #postings=[['docId1', 'pos1,pos2'], ['docID2', 'pos1,pos2']]
-            postings=[ [int(x[0]), map(int, x[1].split(','))] for x in postings ]   #final postings list  
+            postings=[ [str(x[0]), map(str, x[1].split(','))] for x in postings ]   #final postings list  
             self.index[term]=postings
             tf = tf.split(';')
             # self.tf[term] = map(float, tf)
@@ -69,7 +68,7 @@ class QueryIndex:
         f = open(self.titleIndexFile, 'r', encoding="utf-8")
         for line in f:
             docid, title = line.rstrip().split(' ', 1)
-            self.myIndex[int(pageid)]=title
+            self.myIndex[str(docid)]=title
         f.close()
 
     def dotProduct(self, vector1, vector2):
@@ -93,7 +92,7 @@ class QueryIndex:
         #count score of each doc
         docScores = [[self.dotProduct(currDocVec, queryVector), doc ] for doc, curDocVec in docVecs.items()]
         docScores.sort(reverse=True)
-        resultDocs = [x|1] for x in docScores][:10]
+        resultDocs = [x[1] for x in docScores][:10]
         resultDocs = [self.myIndex[x] for x in resultDocs]
         print ('\n'.join(resultDocs))
         print ('\n')
