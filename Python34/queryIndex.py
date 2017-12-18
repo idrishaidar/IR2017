@@ -34,8 +34,9 @@ class QueryIndex:
         
 
     def getTerms(self, line):
+        # line=join(map(str, line))
         line=line.lower()
-        line=re.sub(r'[^a-z0-9 ]',' ',line) #put spaces instead of non-alphanumeric characters
+        line=re.sub(r'[^a-z0-9 ]',' ',line) #put spaces instead of non-alphanumeric characters 
         line=line.split()
         line=[x for x in line if x not in self.stopw]
         line=[ stemmer.stem(word) for word in line]
@@ -61,7 +62,7 @@ class QueryIndex:
             postings=[x.split(':') for x in postings] #postings=[['docId1', 'pos1,pos2'], ['docID2', 'pos1,pos2']]
             postings=[ [str(x[0]), map(str, x[1].split(','))] for x in postings ]   #final postings list  
             self.index[term]=postings
-            tf = tf.split(',')           
+            tf = tf.split(',')    
             self.tf[term] = list(map(float, tf))
             # self.tf[term] = [float(tf) for tf in self.tf[term]]
             self.idf[term] = float(idf)
@@ -69,8 +70,8 @@ class QueryIndex:
 
         f = open(self.titleIndexFile, 'r', encoding="utf-8")
         for line in f:
-            docid, title = line.rstrip().split(' ', 1)
-            self.myIndex[str(docid)]=title
+            docid, title, date = line.rstrip().split('|', 2)
+            self.myIndex[str(docid)] = '|'.join((docid, title, date))
         f.close()
 
     def dotProduct(self, vector1, vector2):
@@ -96,7 +97,13 @@ class QueryIndex:
         docScores.sort(reverse=True)
         resultDocs = [x[1] for x in docScores][:10]
         resultDocs = [self.myIndex[x] for x in resultDocs]
-        print ('\n'.join(resultDocs).replace(u"\u2018", "'").replace(u"\u2019", "'")) # temporary fix for printing quotation
+        for x in resultDocs:
+            docid, title, date, url = x.split('|')
+            print(title)
+        # resultDocs = ''.join(resultDocs).replace(u"\u2018", "'").replace(u"\u2019", "'")
+        # for docid, attr in self.resultDocs.items():
+            # docid, title, date = attr.split('|')
+        # print ('\n'.join(resultDocs).replace(u"\u2018", "'").replace(u"\u2019", "'")) # temporary fix for printing quotation
         # print ('\n')
 
     def queryType(self,q):
@@ -131,6 +138,7 @@ class QueryIndex:
             # print(p)
             # print via rankDocuments()
             self.rankDocuments(q, docs)          
+            
 
     def ftq(self,q):
         # Free text query
@@ -211,7 +219,8 @@ class QueryIndex:
         self.stopwordsFile = "C:\Python34\stopwords_indo.txt"
         self.indexFile = "C:\Python34\collIndex.dat"
         self.titleIndexFile = "C:\Python34\myTitleIndex.txt"
-        self.q = param[1]
+        self.myCollection = "C:\Python34\collection.xml"
+        self.q = param
 
 
     def queryIndex(self):
@@ -222,7 +231,7 @@ class QueryIndex:
         # while True:
             # q=sys.stdin.readline()
         # if self.q=='':
-            
+        self.q =(' '.join(self.q))
         qt=self.queryType(self.q)
         if qt=='OWQ':
             self.owq(self.q)

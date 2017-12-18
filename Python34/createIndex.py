@@ -45,31 +45,35 @@ class CreateIndex:
             doc.append(line)
         
         currentDoc=''.join(doc)
-        #harusnya bukan docno tapi docid, utk semntara docno nyesuaiin sama koleksinya
-        docid=re.search('<DOCNO>(.*?)</DOCNO>', currentDoc, re.DOTALL)
+        docid=re.search('<DOCID>(.*?)</DOCID>', currentDoc, re.DOTALL)
+        docdate=re.search('<DATETIME>(.*?)</DATETIME>', currentDoc, re.DOTALL)
+        docurl=re.search('<DOC URL>(.*?)</DOC URL>', currentDoc, re.DOTALL)
         doctitle=re.search('<TITLE>(.*?)</TITLE>', currentDoc, re.DOTALL)
         doctext=re.search('<TEXT>(.*?)</TEXT>', currentDoc, re.DOTALL)
+
         
-        if docid==None or doctitle==None or doctext==None:
+        if docid==None or doctitle==None or doctext==None or docdate==None:
             return {}
 
         docs={}
-        docs['DOCNO']=docid.group(1)
-        docs['TITLE']=doctitle.group(1)
-        docs['TEXT']=doctext.group(1)
-
+        docs['DOCID'] = docid.group(1)
+        docs['DATETIME'] = docdate.group(1)
+        docs['DOC URL'] = docurl.group(1)
+        docs['TITLE'] = doctitle.group(1)
+        docs['TEXT'] = doctext.group(1)
         return docs
 
 
     def writeIndexToFile(self):
         f=open(self.indexFile, 'w', encoding="utf-8")
-        # print (self.docCount, file=f)        
+        print (self.docCount)        
         
         for term in self.index.keys():
             postinglist=[]
             for p in self.index[term]:
-                docID=p[0]
+                docID=p[0].strip()
                 positions=p[1]
+                # date = p[2]
                 postinglist.append(':'.join([str(docID) ,','.join(map(str,positions))]))
 
             thisPosting = ';'.join(postinglist)
@@ -80,14 +84,15 @@ class CreateIndex:
         f.close()
 
         f=open(self.titleIndexFile, 'w', encoding="utf-8")
-        for docid, title in self.myIndex.items():
-            print (docid.strip(), title, file=f)
+        for docid, attr in self.myIndex.items():
+            title, date, url = attr.split('|')
+            print ('|'.join((docid.strip(), title, date, url)), file=f)
         f.close()
         
 
     def getParams(self):
         self.stopwordsFile = "C:\Python34\stopwords_indo.txt"
-        self.collectionFile = "C:\Python34\korpusA.txt"
+        self.collectionFile = "C:\Python34\scrap_half.txt"
         self.indexFile = "C:\Python34\collIndex.dat"
         self.titleIndexFile = "C:\Python34\myTitleIndex.txt"
         
@@ -105,10 +110,12 @@ class CreateIndex:
         #main loop creating the index
         while docdict != {}:            
             lines = '\n'.join((docdict['TITLE'],docdict['TEXT']))
-            docid = (str(docdict['DOCNO'])).strip()
+            docid = (str(docdict['DOCID']))
+            docdate = docdict['DATETIME'].strip()
             terms = self.getTerms(lines)
 
-            self.myIndex[docdict['DOCNO']] = docdict['TITLE']
+            # self.myIndex[docdict['DOCNO']] = docdict['TITLE']
+            self.myIndex[docdict['DOCID']] = '|'.join((docdict['TITLE'].strip(), docdict['DATETIME'].strip(), docdict['DOC URL'].strip()))
             self.docCount+=1
             
             #build the index for the current page
