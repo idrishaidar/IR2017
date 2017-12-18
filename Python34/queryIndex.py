@@ -100,8 +100,8 @@ class QueryIndex:
         # print ('\n')
 
     def queryType(self,q):
-        # if '"' in q:
-        #     return 'PQ'
+        if '"' in q:
+            return 'PQ'
         if len(q.split()) > 1:
             return 'FTQ'
         else:
@@ -207,9 +207,11 @@ class QueryIndex:
 
         
     def getParams(self):
+        param = sys.argv
         self.stopwordsFile = "C:\Python34\stopwords_indo.txt"
         self.indexFile = "C:\Python34\collIndex.dat"
         self.titleIndexFile = "C:\Python34\myTitleIndex.txt"
+        self.q = param[1]
 
 
     def queryIndex(self):
@@ -217,17 +219,17 @@ class QueryIndex:
         self.readIndex() 
         self.getStopwords() 
 
-        while True:
-            q=sys.stdin.readline()
-            if q=='':
-                break
-            qt=self.queryType(q)
-            if qt=='OWQ':
-                self.owq(q)
-            elif qt=='FTQ':
-                self.ftq(q)
-            elif qt=='PQ':
-                self.pq(q)
+        # while True:
+            # q=sys.stdin.readline()
+        # if self.q=='':
+            
+        qt=self.queryType(self.q)
+        if qt=='OWQ':
+            self.owq(self.q)
+        elif qt=='FTQ':
+            self.ftq(self.q)
+        elif qt=='PQ':
+            self.pq(self.q)
         
         
 if __name__=="__main__":
