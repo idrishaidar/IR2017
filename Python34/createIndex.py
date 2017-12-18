@@ -86,12 +86,10 @@ class CreateIndex:
         
 
     def getParams(self):
-        #run via cmd C:\Python34\python.exe C:\Python34\createIndex.py C:\Python34\stopwords_indo.txt C:\Python34\korpusA.txt C:\Python34\testIndex.dat C:\Python34\titleIndex.txt
-        param=sys.argv
-        self.stopwordsFile=param[1]
-        self.collectionFile=param[2]
-        self.indexFile=param[3]
-        self.titleIndexFile=param[4]
+        self.stopwordsFile = "C:\Python34\stopwords_indo.txt"
+        self.collectionFile = "C:\Python34\korpusA.txt"
+        self.indexFile = "C:\Python34\collIndex.dat"
+        self.titleIndexFile = "C:\Python34\myTitleIndex.txt"
         
 
     #main 

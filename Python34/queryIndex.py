@@ -96,8 +96,8 @@ class QueryIndex:
         docScores.sort(reverse=True)
         resultDocs = [x[1] for x in docScores][:10]
         resultDocs = [self.myIndex[x] for x in resultDocs]
-        print ('\n'.join(resultDocs))
-        print ('\n')
+        print ('\n'.join(resultDocs).replace(u"\u2018", "'").replace(u"\u2019", "'")) # temporary fix for printing quotation
+        # print ('\n')
 
     def queryType(self,q):
         # if '"' in q:
@@ -144,14 +144,14 @@ class QueryIndex:
             try:
                 postings=self.index[term]
                 docs=[p[0] for p in postings]
-                li=li|set(docs)
+                thisList = thisList|set(docs)
             except:
                 pass
         
-        thisList=list(thisList)
+        thisList = list(thisList)
         # li.sort()
         # print(' '.join(map(str,li)))
-        self.rankDocuments(q, li)
+        self.rankDocuments(q, thisList)
 
     def pq(self,q):
         # Phrase Query (not completed)
@@ -207,10 +207,9 @@ class QueryIndex:
 
         
     def getParams(self):
-        param=sys.argv
-        self.stopwordsFile=param[1]
-        self.indexFile=param[2]
-        self.titleIndexFile=param[3]
+        self.stopwordsFile = "C:\Python34\stopwords_indo.txt"
+        self.indexFile = "C:\Python34\collIndex.dat"
+        self.titleIndexFile = "C:\Python34\myTitleIndex.txt"
 
 
     def queryIndex(self):
